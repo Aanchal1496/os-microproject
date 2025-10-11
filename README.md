@@ -4,9 +4,9 @@
 This microproject simulates two key CPU scheduling algorithms—**Shortest Job First (SJF)** and **Shortest Remaining Time First (SRTF)**—and presents a concise theoretical overview of **process states** and **types of operating systems**. It is designed to be educational, visually intuitive, and evaluator-friendly.
 
 ## 👩‍💻 Contributors
-- **Aanchal Jain**
-- **Shivam**
--  **Yash Shinde**
+- **Aanchal Jain(50)**
+- **Shivam Sankpal(63)**
+-  **Yash Shinde(67)**
 
 ## 🧠 Theory Modules
 
