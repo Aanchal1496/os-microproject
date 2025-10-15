@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Learning Platform | Project NOVA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a10; 
+            color: #f0f0f0; 
+            background-image: radial-gradient(circle at 10% 20%, #00f0ff1a 0%, #0a0a10 50%, #1e90ff1a 100%);
+            animation: pulse-bg 20s infinite alternate;
+            padding-top: 50px; 
+            padding-bottom: 30px;
+        }
+
+        @keyframes pulse-bg {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        .shadow-neon {
+            box-shadow: 0 0 8px #00f0ff80;
+        }
+        .shadow-neon-hover:hover {
+            box-shadow: 0 0 15px #1e90ff, 0 0 25px #1e90ff; 
+            transform: scale(1.05);
+        }
+    
+        .input-glow:focus {
+            outline: none;
+            border-color: #1e90ff;
+            box-shadow: 0 0 5px #1e90ff;
+        }
+
+        .view-transition {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes text-flicker {
+            0% { opacity: 0.8; text-shadow: 0 0 1px #1e90ff; }
+            5% { opacity: 1; text-shadow: 0 0 5px #00f0ff; }
+            10% { opacity: 0.9; text-shadow: none; }
+            15% { opacity: 1; text-shadow: 0 0 5px #1e90ff; }
+            100% { opacity: 1; }
+        }
+        .text-flicker {
+            animation: text-flicker 4s infinite linear alternate;
+        }
+
+        @keyframes subtle-move {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(1px, 1px); }
+        }
+        .subtle-move {
+            animation: subtle-move 10s ease-in-out infinite;
+        }
+
+        @keyframes loading-dots {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00f0ff;
+            border-radius: 100%;
+            display: inline-block;
+            animation: loading-dots 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes scan-reveal {
+            0% { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); opacity: 0; }
+            80% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; }
+            100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; }
+        }
+        .scan-transition {
+            animation: scan-reveal 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) both;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes result-reveal {
+            0% { opacity: 0; transform: scaleY(0.1); }
+            100% { opacity: 1; transform: scaleY(1); }
+        }
+        .result-animated {
+            animation: result-reveal 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            transform-origin: top;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.3s; }
+
+        @keyframes header-pulse {
+            0% { box-shadow: 0 0 5px #00f0ff30; }
+            50% { box-shadow: 0 0 10px #00f0ff80; }
+            100% { box-shadow: 0 0 5px #00f0ff30; }
+        }
+        .header-animated {
+            animation: header-pulse 5s infinite alternate;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'os-bg': '#0a0a10',       
+                        'os-primary': '#00f0ff', 
+                        'os-secondary': '#1e90ff', 
+                        'os-accent': '#1e90ff',   
+                        'os-text': '#f0f0f0',    
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <header id="app-header" class="fixed top-0 left-0 w-full bg-[#151520] border-b border-os-primary/50 header-animated z-50 p-2">
+        <div class="max-w-7xl mx-auto flex justify-between items-center text-xs text-gray-400" id="header-content-wrapper">
+            </div>
+    </header>
+
+    <div id="app-container" class="w-full max-w-4xl bg-[#101015] border border-[#00f0ff50] shadow-neon rounded-xl p-6 md:p-10 transition-all duration-300">
+
+        <div id="view-landing" class="view view-transition"></div>
+        <div id="view-login" class="view hidden view-transition"></div>
+        <div id="view-main-menu" class="view hidden view-transition"></div>
+        <div id="view-theory-menu" class="view hidden view-transition"></div>
+        <div id="view-theory-content" class="view hidden view-transition"></div>
+        <div id="view-algorithm-menu" class="view hidden view-transition"></div>
+        <div id="view-algorithm-content" class="view hidden view-transition"></div>
+        
+        <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center view-transition">
+            <div class="bg-[#1a1a25] border border-os-accent p-6 rounded-lg shadow-neon max-w-sm w-full">
+                <h3 class="text-xl font-bold mb-3 text-os-primary" id="modal-title"></h3>
+                <p class="text-os-text" id="modal-content"></p>
+                <button onclick="document.getElementById('message-modal').classList.add('hidden')" class="mt-4 w-full bg-os-accent text-os-bg py-2 rounded-lg hover:bg-os-primary transition duration-300 shadow-neon">Close</button>
+            </div>
+        </div>
+
+    </div>
+
+    <footer id="app-footer" class="fixed bottom-0 left-0 w-full bg-[#151520] border-t border-os-secondary/50 text-xs text-gray-500 z-50 p-1 text-center">
+        <span class="text-gray-600">v1.0.1 | </span>
+        <span class="text-os-primary">OS Concepts Research Project</span>
+        <span class="text-gray-600"> | Security Level: Basic Access</span>
+    </footer>
+
+    <script>
+
+        const APP_ID = 'os-learning-platform'; 
+        let appState = {
+            currentView: 'landing', 
+            loggedIn: false,
+            userId: null,
+            username: null,
+            quizScores: {}, 
+            feedback: {}, 
+            processInput: [ 
+                { id: 'P1', arrival: 0, burst: 10 },
+                { id: 'P2', arrival: 1, burst: 5 },
+                { id: 'P3', arrival: 2, burst: 2 }
+            ]
+        };
+
+        const THEORY_DATA = {
+            'evolution': {
+                title: "OS Types and History",
+                sub_topics: [
+                    {
+                        name: "Batch Operating System",
+                        founded: "1950s (The first OS type)",
+                        info: "In the very early days of computing, the **Batch OS** was used. This system collected similar jobs (programs) into batches using input methods like punch cards or magnetic tape. A human operator then fed these batches to the computer. Since the CPU was extremely expensive, the main goal was to keep it running constantly without any human interaction or interruption once a batch started.",
+                        example: "Early mainframes used for scientific research and large, scheduled tasks like monthly payroll or large data report generation.",
+                        advantages: [
+                            "Maximizes CPU utilization because there is no idle time waiting for user input.",
+                            "Excellent **throughput** (maximum jobs completed) for large, non-interactive jobs.",
+                            "Simple design and easy to manage system resources as jobs run one after the other."
+                        ],
+                        disadvantages: [
+                            "Debugging is extremely difficult because there is no way to give real-time input or see instant feedback.",
+                            "Small, quick jobs can wait a very long time (**starvation**) if they are stuck behind a single large job that is running.",
+                            "The CPU can be idle for periods while the system waits for slow input/output (I/O) devices to finish their work."
+                        ],
+                        feeling_good: "Batch OS works best when the main goal is to finish **the largest amount of work** (throughput), like running nightly reports or processing large data batches.",
+                        image_url: "batch.png"
+                    },
+                    {
+                        name: "Multiprogramming Operating System",
+                        founded: "Mid-1960s",
+                        info: "This system introduced the core concept of computer efficiency. Multiple independent programs (jobs) are loaded into the computer's main memory at the same time. Whenever a running program needs to stop temporarily (for example, waiting for data from the hard drive or a printer), the Operating System quickly switches the CPU to run another job already in memory. This continuous switching avoids wasting valuable CPU time.",
+                        example: "Early mainframes and predecessors to modern server OS environments like early UNIX and OS/360.",
+                        advantages: [
+                            "Achieves very high CPU usage by letting the CPU work on other tasks during I/O wait times.",
+                            "Better overall utilization of all computer resources (memory, CPU, and I/O devices).",
+                            "Reduces the average response time for processes waiting for the CPU."
+                        ],
+                        disadvantages: [
+                            "Requires complex hardware and software systems to manage memory (like memory protection).",
+                            "The process of saving and loading the CPU's state (**context switching**) every time the OS switches tasks creates extra work (overhead).",
+                            "More complex CPU scheduling algorithms are necessary to decide which job to run next."
+                        ],
+                        feeling_good: "Multiprogramming is good when you have a mix of programs that need the **CPU** (CPU-bound) and programs that need **I/O** (I/O-bound). It ensures the CPU is rarely wasting time.",
+                        image_url: "multiprogramming.png"
+                    },
+                    {
+                        name: "Time-Sharing (Multitasking) Operating System",
+                        founded: "Late 1960s (e.g., UNIX)",
+                        info: "Time-Sharing is an evolution of multiprogramming designed specifically for user interaction. The CPU's time is divided into very small, fixed time slots (called a **time quantum**). The OS rapidly cycles the CPU through all active programs, pausing and restarting them quickly. To the user, this rapid cycling creates the illusion that their program is running continuously, allowing many users to interact with the computer at once.",
+                        example: "All modern desktop operating systems: Windows, Linux, macOS. Essential for operating multi-user servers.",
+                        advantages: [
+                            "Allows users to interact with the computer instantly and simultaneously.",
+                            "Ensures fair sharing of CPU resources among all competing programs.",
+                            "Very low waiting time for users, making the entire system feel responsive and fast."
+                        ],
+                        disadvantages: [
+                            "Security becomes complicated because users and programs are sharing the same core system resources and memory.",
+                            "High overhead due to constantly switching tasks (context switching) at very frequent, fixed intervals.",
+                            "The system needs strong protection mechanisms to ensure a crash in one user's program does not affect another user's session."
+                        ],
+                        feeling_good: "Time-Sharing is essential for a **modern desktop or server** where many people or applications need to run and interact at the same time.",
+                        image_url: "time sharing.png"
+                    },
+                    {
+                        name: "Distributed Operating System",
+                        founded: "1970s and 80s",
+                        info: "A **Distributed OS** manages a group of physical computers connected by a high-speed network and makes them function as a single, powerful computer. The key feature is transparency: the user doesn't need to know which specific machine is running their process or storing their file; the OS handles all resource sharing, load balancing, and communication automatically across the entire cluster of machines.",
+                        example: "Early experimental systems like Amoeba. The core ideas are now used in modern cloud computing and large cluster environments.",
+                        advantages: [
+                            "System power is easily increased by simply adding new machines (**scalability**).",
+                            "If one machine fails, others can often take over the work (**high reliability** and fault tolerance).",
+                            "Resources (CPU power, memory, storage) are efficiently shared and managed across all physical machines.",
+                            "Enhanced processing speed by dividing a single large task into pieces to be run simultaneously."
+                        ],
+                        disadvantages: [
+                            "The design and implementation of the OS software is extremely complex and difficult to test.",
+                            "Requires specialized, highly reliable network infrastructure for fast communication between nodes.",
+                            "Debugging and maintaining security across multiple independent computers are major challenges."
+                        ],
+                        feeling_good: "Distributed OS is best when **extreme power and reliability** are needed, such as in large data centers or critical web services that must never fail.",
+                        image_url: "distributed.png"
+                    },
+                    {
+                        name: "Multiprocessor Operating System",
+                        founded: "Late 1980s (Symmetric Multiprocessing)",
+                        info: "A **Multiprocessor OS** manages a system that contains two or more identical CPUs (cores) that share the same main memory and peripheral devices. The OS distributes the workload among these CPUs. The primary goal is to maximize throughput (getting more work done) and increase overall system reliability. This architecture is the foundation of modern multi-core computers.",
+                        example: "Modern desktop/laptop operating systems (Windows, macOS, Linux) running on multi-core processors, and high-performance server systems.",
+                        advantages: [
+                            "High throughput: Multiple tasks can be executed truly simultaneously on different CPUs.",
+                            "Increased reliability: If one processor fails, the system can continue operating on the remaining processors (graceful degradation).",
+                            "Cost-effective: Sharing memory and peripherals is more efficient than replicating a full computer system.",
+                        ],
+                        disadvantages: [
+                            "Complex scheduling: The OS must use sophisticated algorithms to keep all CPUs busy and balanced.",
+                            "Increased overhead: Requires complex software to manage shared resources and prevent data races (synchronization).",
+                            "Scalability limit: Adding too many processors can eventually lead to performance bottlenecks in the shared memory bus."
+                        ],
+                        feeling_good: "Multiprocessor OS is necessary for any **modern, high-performance computing** task, from running video games smoothly to hosting high-traffic databases.",
+                        image_url: "multiprocessor.png"
+                    },
+                    {
+                        name: "Real-Time Operating System (RTOS)",
+                        founded: "1970s (for control systems)",
+                        info: "An **RTOS** is highly specialized for applications where tasks must be completed within very strict, guaranteed time limits (**deadlines**). It focuses on predictability and speed, prioritizing tasks based on their deadline rather than fairness. Used in systems where a delay could result in critical failure (Hard Real-Time) or simply reduce quality (Soft Real-Time).",
+                        example: "Embedded systems, flight control systems in aircraft, medical imaging devices, and anti-lock braking systems (ABS) in cars.",
+                        advantages: [
+                            "Guarantees that time-sensitive operations finish on time (**determinism**).",
+                            "Extremely reliable, highly responsive, and predictable behavior.",
+                            "Efficient use of resources in time-critical systems with limited memory and processing power."
+                        ],
+                        disadvantages: [
+                            "Programming and debugging are extremely difficult and complex due to tight timing requirements.",
+                            "Requires specialized, often proprietary, scheduling algorithms.",
+                            "Can be very expensive due to specialization and extensive regulatory testing needs."
+                        ],
+                        feeling_good: "RTOS is crucial when **timing is life-or-death**, such as controlling an airplane, running medical devices, or managing a nuclear power plant.",
+                        image_url: "real time.png"
+                    },
+                    {
+                        name: "Mobile Operating System",
+                        founded: "2000s (with smartphones)",
+                        info: "A **Mobile OS** is designed specifically for portable devices like phones and tablets. Key engineering focuses include managing low power consumption for long battery life, optimizing touch interfaces, handling wireless communication (Wi-Fi, 4G/5G), and securely supporting a vast number of third-party applications from app stores.",
+                        example: "Android, iOS.",
+                        advantages: [
+                            "Highly optimized for long battery life and very low power usage.",
+                            "Excellent, intuitive graphical user interface (GUI) and touch support.",
+                            "Strong, seamless support for wireless internet and access to millions of applications."
+                        ],
+                        disadvantages: [
+                            "Frequent security and privacy concerns due to location tracking and intrusive app permissions.",
+                            "Device **fragmentation** occurs when older phones cannot run the latest OS versions.",
+                            "Performance can slow down significantly due to many applications running secretly in the background."
+                        ],
+                        feeling_good: "Mobile OS is best for **personal, portable use**, focusing on a fast, easy-to-use interface and instant connectivity.",
+                     
+                        image_url: "mobile.png"
+                    }
+                ],
+                quiz: [
+                    { q: "What allowed multiple programs to be in memory at once?", options: ["Batch Processing", "Multiprogramming", "Single User Systems", "Distributed Systems"], answer: "Multiprogramming" },
+                    { q: "Which OS type lets many users share a computer at the same time?", options: ["Real-Time", "Time-Sharing", "Single Tasking", "Embedded"], answer: "Time-Sharing" },
+                    { q: "The earliest OSes mostly cared about:", options: ["User Interface", "CPU Utilization", "Networking", "Security"], answer: "CPU Utilization" },
+                    { q: "Which OS must complete tasks within strict deadlines?", options: ["Time-Sharing", "Multiprocessor", "Real-Time", "Mobile"], answer: "Real-Time" },
+                    { q: "A Distributed OS makes separate computers look like one single system. True or False?", options: ["True", "False"], answer: "True" }
+                ]
+            },
+            'process_state': {
+                title: "Process States (Life Cycle)",
+                info: "A process is simply a running program. It moves through different states (New, Ready, Running, Waiting/Blocked, Terminated) as the OS manages its life cycle.",
+                founded: "1960s (with multiprogramming systems)",
+                example: "A process moves from Running to Waiting when it asks for data from the hard drive (I/O). It moves back to Ready when the data arrives.",
+                advantages: [
+                    "Helps the OS control and switch between many running programs efficiently.",
+                    "Keeps the whole system stable by separating different processes."
+                ],
+                disadvantages: [
+                    "Switching between states (context switching) adds a small amount of extra work (overhead).",
+                    "If not managed well, programs can get stuck waiting for each other (deadlock)."
+                ],
+                feeling_good: "Process state management is perfect for running many apps at once. It feels 'good' when the computer is fast and responsive, and app switching is quick.",
+               
+                image_url: "process state.png",
+                quiz: [
+                    { q: "What state is a process in when it is waiting for a resource (like I/O)?", options: ["Ready", "Running", "Waiting/Blocked", "New"], answer: "Waiting/Blocked" },
+                    { q: "Which state is the process in when it is actively using the CPU?", options: ["Ready", "Running", "Waiting/Blocked", "Terminated"], answer: "Running" },
+                    { q: "A process moves to the Ready state when:", options: ["It is executing on the CPU", "It finishes its execution", "It is waiting for the CPU to become free", "It is created"], answer: "It is waiting for the CPU to become free" },
+                    { q: "What is the primary function of a dispatcher in this cycle?", options: ["Load the program from disk", "Select the next process to run on the CPU", "Handle hardware interrupts", "Allocate new memory"], answer: "Select the next process to run on the CPU" },
+                    { q: "Which state is the final step in a process's life cycle?", options: ["Running", "Ready", "New", "Terminated"], answer: "Terminated" }
+                ]
+            }
+        };
+
+        const ALGORITHM_DATA = {
+            'sjf': {
+                title: "Shortest Job First (SJF) Scheduling",
+                info: "SJF is non-preemptive, meaning once a process starts, it runs until it finishes. The OS always picks the process that has the smallest total burst time to run next.",
+                algorithm: `
+                1. At time $t=0$, or when CPU is free, select the arrived process with the minimum Burst Time.
+                2. The selected process runs until its Burst Time is completed.
+                3. Completion Time ($C_i$) = Start Time + Burst Time.
+                4. Turnaround Time ($T_i$) = $C_i - A_i$.
+                5. Waiting Time ($W_i$) = $T_i - \text{Burst Time}_i$.
+                `
+            },
+            'srtf': {
+                title: "SRTF (Shortest Remaining Time First)",
+                info: "SRTF is the preemptive version of SJF. The OS constantly checks if a new process arrives that has a shorter remaining burst time than the current one. If so, the current process is paused (preempted) and the new short process runs.",
+                algorithm: `
+                1. At every time unit, check the Ready Queue for the process with the minimum Remaining Burst Time.
+                2. If a new process is shorter than the running process's remaining time, PREEMPT the running process.
+                3. The chosen process executes for one time unit.
+                4. Recalculate metrics (Completion Time, Turnaround Time, Waiting Time) at the end of execution.
+                `
+            }
+        };
+
+        const processColorsMap = {
+            'P1': 'bg-red-400',
+            'P2': 'bg-green-400',
+            'P3': 'bg-blue-400',
+            'P4': 'bg-purple-400',
+            'P5': 'bg-yellow-400',
+            'Idle': 'bg-gray-700' 
+        };
+
+        const defaultColors = ['bg-[#00f0ff]', 'bg-[#1e90ff]', 'bg-[#34d399]', 'bg-[#a855f7]', 'bg-[#facc15]', 'bg-[#f43f5e]', 'bg-[#60a5fa]'];
+
+        function showModal(title, content) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').textContent = content;
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+
+        function loadState() {
+            try {
+                const storedState = localStorage.getItem(APP_ID);
+                if (storedState) {
+                    const loadedState = JSON.parse(storedState);
+                    appState = {
+                        ...appState,
+                        ...loadedState,
+                        quizScores: loadedState.quizScores || {},
+                        feedback: loadedState.feedback || {},
+                        processInput: loadedState.processInput && loadedState.processInput.length > 0 ? loadedState.processInput : appState.processInput
+                    };
+                } else {
+                    appState.userId = 'user-' + Math.random().toString(16).substring(2, 8);
+                }
+            } catch (e) {
+                console.error("Could not load state from localStorage:", e);
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(APP_ID, JSON.stringify(appState));
+            } catch (e) {
+                console.error("Could not save state to localStorage:", e);
+            }
+        }
+
+        function resetViewVisibility() {
+            document.querySelectorAll('.view').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('view-transition');
+            });
+        }
+
+        function navigate(view, data = {}) {
+            resetViewVisibility();
+            appState.currentView = view;
+            saveState();
+
+            updateHeaderStatus();
+
+            const viewElement = document.getElementById(`view-${view.replace(/_/g, '-')}`);
+            viewElement.classList.remove('hidden');
+            viewElement.classList.add('view-transition'); 
+
+            if (view === 'landing') {
+                renderLanding();
+            } else if (view === 'login') {
+                renderLogin();
+            } else if (view === 'main_menu') {
+                renderMainMenu();
+            } else if (view === 'theory_menu') {
+                renderTheoryMenu();
+            } else if (view === 'theory_content') {
+                renderTheoryContent(data.topicKey);
+            } else if (view === 'algorithm_menu') {
+                renderAlgorithmMenu();
+            } else if (view === 'algorithm_content') {
+                renderAlgorithmContent(data.algoKey, appState.processInput);
+            }
+        }
+
+        function updateHeaderStatus() {
+            const wrapper = document.getElementById('header-content-wrapper');
+            
+            let statusHtml;
+            if (appState.loggedIn) {
+                statusHtml = `
+                    <span class="text-os-primary font-bold">PROJECT NOVA: OS LEARNING INTERFACE</span>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-green-400 text-xs">ONLINE | User: ${appState.username}</span>
+                        <span id="current-time" class="text-xs"></span>
+                        <button onclick="doExit()" class="text-red-400 hover:text-red-300 font-semibold transition bg-[#252535] px-2 py-0.5 rounded-md border border-red-500/50">
+                            LOG OUT
+                        </button>
+                    </div>
+                `;
+            } else {
+                statusHtml = `
+                    <span class="text-os-primary font-bold">PROJECT NOVA: OS LEARNING INTERFACE</span>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-yellow-400 text-xs">OFFLINE | Access Required</span>
+                        <span id="current-time" class="text-xs"></span>
+                    </div>
+                `;
+            }
+            wrapper.innerHTML = statusHtml;
+            updateClock();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const dateString = now.toLocaleDateString('en-US');
+            const timeEl = document.getElementById('current-time');
+            if (timeEl) {
+                timeEl.textContent = `SYSTEM TIME: ${dateString} ${timeString}`;
+            }
+        }
+        setInterval(updateClock, 1000);
+
+        function doLogin() {
+            const usernameInput = document.getElementById('username-input').value.trim();
+            const emailInput = document.getElementById('email-input').value.trim();
+            const rollInput = document.getElementById('roll-input').value.trim();
+            const passwordInput = document.getElementById('password-input').value.trim();
+
+            if (!usernameInput || !emailInput || !rollInput || !passwordInput) {
+                showModal('ACCESS DENIED', 'Please fill in all required student details (Username, Email ID, Roll Number, and Password).');
+                return;
+            }
+
+            if (!emailInput.toLowerCase().endsWith('@gmail.com')) {
+                showModal('VALIDATION ERROR', 'College Email ID must be a Gmail address (e.g., student@gmail.com).');
+                return;
+            }
+         
+            appState.quizScores = {}; 
+            appState.feedback = {}; 
+
+            appState.loggedIn = true;
+            appState.username = usernameInput; 
+            
+            saveState();
+            navigate('main_menu');
+        }
+
+        function doExit() {
+            appState.loggedIn = false;
+            appState.currentView = 'landing'; 
+            appState.username = null;
+            appState.quizScores = {}; 
+            appState.feedback = {}; 
+            saveState();
+            navigate('landing');
+        }
+
+        function renderLanding() {
+            const html = `
+                <div class="relative flex flex-col items-center justify-center p-8 bg-[#1a1a25] rounded-xl border border-[#00f0ff50] shadow-lg subtle-move overflow-hidden scan-transition">
+                    
+                    <div class="absolute inset-0 opacity-10 blur-sm pointer-events-none">
+                        <img src="https://placehold.co/800x600/0a0a10/00f0ff?text=OS+Kernel+Diagram" 
+                            alt="Conceptual OS Background" class="w-full h-full object-cover">
+                    </div>
+
+                    <div class="relative z-10 text-center">
+                        <h1 class="text-5xl font-extrabold text-os-primary mb-6 text-flicker">OS BASICS EXPLORER</h1>
+                        <p class="text-gray-300 text-lg mb-8 text-center max-w-lg">
+                            Welcome! This tool is designed by a computer engineering student to help you quickly understand the **Operating System's core concepts**.
+                        </p>
+
+                        <div class="space-y-4 mb-10 w-full">
+                            <h2 class="text-2xl font-bold text-os-accent border-b border-os-accent/50 pb-2 text-center">Core System Features</h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+                                <div class="p-3 bg-os-secondary/10 rounded-lg border border-os-secondary/30 text-xs hover:bg-os-secondary/20 transition">
+                                    <span class="font-semibold text-os-primary block">DYNAMIC LEARNING:</span> Structured theory on 7 major OS types.
+                                </div>
+                                <div class="p-3 bg-os-secondary/10 rounded-lg border border-os-secondary/30 text-xs hover:bg-os-secondary/20 transition">
+                                    <span class="font-semibold text-os-accent block">ADVANCED STIMULATION:</span> Run SJF and SRTF with custom input.
+                                </div>
+                                <div class="p-3 bg-os-secondary/10 rounded-lg border border-os-secondary/30 text-xs hover:bg-os-secondary/20 transition">
+                                    <span class="font-semibold text-green-400 block">DATA PERSISTENCE:</span> Your quiz scores and settings are saved locally.
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="navigate('login')"
+                            class="w-full max-w-xs bg-os-primary text-os-bg font-bold py-3 rounded-lg text-xl transition duration-500 shadow-neon-hover hover:shadow-neon-hover border border-os-primary">
+                            LOG IN TO START
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('view-landing').innerHTML = html;
+        }
+
+
+        function renderLogin() {
+            appState.quizScores = {}; 
+            appState.feedback = {}; 
+            saveState(); 
+
+            const html = `
+                <div class="flex flex-col items-center justify-center p-8 bg-[#1a1a25] rounded-lg border border-[#1e90ff50] shadow-lg view-transition">
+                    <h1 class="text-4xl font-extrabold text-os-primary mb-2">ACCESS TERMINAL</h1>
+                    <p class="text-gray-400 mb-8 text-center text-sm">Please enter your student credentials to log in.</p>
+
+                    <div class="w-full max-w-sm space-y-4">
+                        <input id="username-input" type="text" placeholder="FULL NAME / USERNAME" required
+                            class="w-full px-4 py-3 border border-[#00f0ff80] rounded-lg bg-[#222230] text-os-text input-glow transition"
+                        />
+                        <input id="email-input" type="email" placeholder="COLLEGE EMAIL ID (must be @gmail.com)" required
+                            class="w-full px-4 py-3 border border-[#00f0ff80] rounded-lg bg-[#222230] text-os-text input-glow transition"
+                        />
+                        <input id="roll-input" type="text" placeholder="ROLL NUMBER" required
+                            class="w-full px-4 py-3 border border-[#00f0ff80] rounded-lg bg-[#222230] text-os-text input-glow transition"
+                        />
+                        <input id="password-input" type="password" placeholder="PASSWORD" required
+                            class="w-full px-4 py-3 border border-[#00f0ff80] rounded-lg bg-[#222230] text-os-text input-glow transition"
+                        />
+                        <button onclick="doLogin()"
+                            class="w-full bg-os-accent text-os-bg font-bold py-3 rounded-lg text-xl transition duration-300 shadow-neon-hover hover:shadow-neon-hover">
+                            AUTHORIZE & LOG IN
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('view-login').innerHTML = html;
+        }
+
+        function renderMainMenu() {
+            const welcomeMsg = appState.username ? `Hello, Student ${appState.username}. Choose a module.` : 'Welcome! Choose a module.';
+            const html = `
+                <div class="text-center view-transition">
+                    <h1 class="text-3xl font-bold text-os-primary mb-2">${welcomeMsg}</h1>
+                    <p class="text-gray-400 mb-8">Select either Theory or Algorithms to begin your research.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl mx-auto">
+                        <div onclick="navigate('theory_menu')"
+                            class="p-6 bg-os-secondary text-os-text rounded-xl shadow-lg border border-os-secondary/50 cursor-pointer hover:bg-os-secondary/80 transition duration-300 shadow-neon-hover">
+                            <h2 class="text-2xl font-semibold mb-2 text-os-primary">Theory</h2>
+                            <p class="text-sm opacity-90">Understand the concepts, history, and types of OS.</p>
+                        </div>
+
+                        <div onclick="navigate('algorithm_menu')"
+                            class="p-6 bg-os-accent/90 text-os-bg rounded-xl shadow-lg border border-os-accent/50 cursor-pointer hover:bg-os-accent/70 transition duration-300 shadow-neon-hover">
+                            <h2 class="text-2xl font-semibold mb-2 text-os-primary">Algorithms</h2>
+                            <p class="text-sm opacity-90 text-os-bg">Stimulate CPU scheduling and see the results.</p>
+                        </div>
+                    </div>
+
+                    <button onclick="doExit()"
+                        class="mt-10 bg-gray-700 text-os-text py-2 px-6 rounded-lg hover:bg-gray-500 transition shadow-md">
+                        EXIT PROGRAM
+                    </button>
+                </div>
+            `;
+            document.getElementById('view-main-menu').innerHTML = html;
+        }
+
+        function renderTheoryMenu() {
+            const html = `
+                <h1 class="text-3xl font-bold text-os-primary mb-8 text-center view-transition">Theory Topics</h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl mx-auto">
+                    <div onclick="navigate('theory_content', {topicKey: 'evolution'})"
+                        class="p-6 bg-[#1a1a25] border-l-4 border-os-primary rounded-lg shadow-md cursor-pointer hover:bg-[#252535] transition duration-300 shadow-neon-hover">
+                        <h2 class="text-xl font-semibold text-os-primary">OS Types and History</h2>
+                        <p class="text-sm text-gray-400 mt-1">From Batch to Mobile Systems (7 Major Types).</p>
+                    </div>
+
+                    <div onclick="navigate('theory_content', {topicKey: 'process_state'})"
+                        class="p-6 bg-[#1a1a25] border-l-4 border-os-accent rounded-lg shadow-md cursor-pointer hover:bg-[#252535] transition duration-300 shadow-neon-hover">
+                        <h2 class="text-xl font-semibold text-os-accent">Process States</h2>
+                        <p class="text-sm text-gray-400 mt-1">The life cycle of a running program.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button onclick="navigate('main_menu')"
+                        class="text-os-text hover:text-os-primary font-semibold transition">
+                        ← Back to Main Menu
+                    </button>
+                </div>
+            `;
+            document.getElementById('view-theory-menu').innerHTML = html;
+        }
+        
+        function generateDiffTableHtml(data) {
+            const maxLen = Math.max(data.advantages.length, data.disadvantages.length);
+            const rows = [];
+            for (let i = 0; i < maxLen; i++) {
+                const adv = data.advantages[i] || '—';
+                const disadv = data.disadvantages[i] || '—';
+                rows.push(`
+                    <tr class="border-b border-gray-800">
+                        <td class="p-3 text-sm text-green-400 font-medium">${adv}</td>
+                        <td class="p-3 text-sm text-red-400 font-medium">${disadv}</td>
+                    </tr>
+                `);
+            }
+
+            return `
+                <div class="overflow-x-auto border border-[#00f0ff50] rounded-lg shadow-md">
+                    <table class="min-w-full divide-y divide-gray-800">
+                        <thead class="bg-[#1a1a25]">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-os-primary uppercase tracking-wider w-1/2">Advantages</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-os-accent uppercase tracking-wider w-1/2">Disadvantages</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-[#20202a] divide-y divide-gray-800">
+                            ${rows.join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+
+        function renderTheoryContent(topicKey) {
+            const data = THEORY_DATA[topicKey];
+            const isCompleted = appState.quizScores[topicKey] !== undefined;
+
+            if (!data) {
+                showModal('Error', 'Topic not found.');
+                navigate('theory_menu');
+                return;
+            }
+
+            let mainContentHtml = '';
+
+            if (topicKey === 'evolution' && data.sub_topics) {
+                mainContentHtml = data.sub_topics.map((sub, subIndex) => {
+                    const diffTableHtml = generateDiffTableHtml(sub);
+                    const imageId = `theory-image-${topicKey}-${subIndex}`;
+           
+                    const imageUrl = sub.image_url || 'https://placehold.co/800x250/1e90ff/0a0a10?text=CONCEPT+IMAGE+MISSING';
+                    
+                    const imageHtml = `
+                        <div id="image-container-${imageId}" class="relative w-full h-auto bg-[#1a1a25] flex flex-col items-center justify-center rounded-lg border border-os-accent/50 p-4">
+                            <img id="${imageId}" src="${imageUrl}" 
+                                class="w-full h-auto rounded-lg shadow-xl border border-os-primary/50"
+                                alt="${sub.name} Conceptual Diagram" />
+                            <p class="text-xs text-gray-500 mt-2 text-center">A conceptual diagram of ${sub.name}. **(Replace this link with your custom image!)**</p>
+                        </div>
+                    `;
+
+                    return `
+                        <div class="mt-8 pt-4 border-t-2 ${subIndex > 0 ? 'border-gray-700' : 'border-os-primary'}">
+                            <h2 class="text-2xl font-extrabold text-os-text mb-6">${subIndex + 1}. ${sub.name}</h2>
+                            
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-os-primary mb-2">1. When It Was First Used</h3>
+                                <div class="bg-[#1a1a25] p-4 rounded-lg shadow-inner border-l-4 border-os-primary">
+                                    <p class="text-gray-300 leading-relaxed font-semibold">${sub.founded}</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-os-accent mb-2">2. What It Is (Definition)</h3>
+                                <div class="bg-[#20202a] p-4 rounded-lg shadow-inner">
+                                    <p class="text-os-text leading-relaxed">${sub.info}</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-os-primary mb-4">3. Good Things vs. Bad Things</h3>
+                                ${diffTableHtml}
+                            </div>
+
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-os-accent mb-2">4. Example and Key Picture</h3>
+                                <div class="bg-[#20202a] p-4 rounded-lg shadow-md border border-gray-700">
+                                    <p class="text-os-text mb-4">Example: ${sub.example}</p>
+                                    ${imageHtml}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-os-primary mb-2">5. When This OS Works Best</h3>
+                                <div class="bg-[#1a251a] p-4 rounded-lg shadow-inner border-l-4 border-green-500">
+                                    <p class="text-green-400 leading-relaxed">${sub.feeling_good}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } else {
+                const diffTableHtml = generateDiffTableHtml(data);
+                const imageId = `theory-image-${topicKey}`;
+               
+                const imageUrl = data.image_url || 'https://placehold.co/800x250/1e90ff/0a0a10?text=CONCEPT+IMAGE+MISSING';
+
+                const imageHtml = `
+                    <div id="image-container-${imageId}" class="relative w-full h-auto bg-[#1a1a25] flex flex-col items-center justify-center rounded-lg border border-os-accent/50 p-4">
+                        <img id="${imageId}" src="${imageUrl}" 
+                             class="w-full h-auto rounded-lg shadow-xl border border-os-accent/50"
+                             alt="${data.title} Conceptual Diagram" />
+                        <p class="text-xs text-gray-500 mt-2 text-center">A simple picture of Process States. **(Replace this link with your custom image!)**</p>
+                    </div>
+                `;
+                
+                mainContentHtml = `
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-os-primary mb-2">1. When It Was First Used</h3>
+                        <div class="bg-[#1a1a25] p-4 rounded-lg shadow-inner border-l-4 border-os-primary">
+                            <p class="text-gray-300 leading-relaxed font-semibold">${data.founded}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-os-accent mb-2">2. What It Is (Definition)</h3>
+                        <div class="bg-[#20202a] p-4 rounded-lg shadow-inner">
+                            <p class="text-os-text leading-relaxed">${data.info}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-os-primary mb-4">3. Good Things vs. Bad Things</h3>
+                        ${diffTableHtml}
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-os-accent mb-2">4. Example and Key Picture</h3>
+                        <div class="bg-[#20202a] p-4 rounded-lg shadow-md border border-gray-700">
+                            <p class="text-os-text mb-4">Example: ${data.example}</p>
+                            ${imageHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-os-primary mb-2">5. When This Concept Works Best</h3>
+                        <div class="bg-[#1a251a] p-4 rounded-lg shadow-inner border-l-4 border-green-500">
+                            <p class="text-green-400 leading-relaxed">${data.feeling_good}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const quizHtml = generateQuizHtml(topicKey);
+            const feedbackHtml = generateFeedbackHtml(topicKey);
+            const scoreHtml = isCompleted ? `<p class="mt-4 text-center text-lg font-bold text-green-400">STATUS: MODULE COMPLETE. Score: ${appState.quizScores[topicKey]}/5</p>` : '';
+
+
+            const fullHtml = `
+                <h1 class="text-3xl font-bold text-os-primary mb-6 text-center border-b pb-4 border-gray-700">${data.title}</h1>
+                <div class="space-y-8">
+                    
+                    ${mainContentHtml}
+
+                    <div class="mt-8 pt-6 border-t border-gray-700">
+                        ${scoreHtml}
+                        <h3 class="text-2xl font-bold text-os-accent mb-4">6. Quick Quiz (5 Questions)</h3>
+                        <form id="quiz-form" onsubmit="event.preventDefault(); submitQuiz('${topicKey}')" class="${isCompleted ? 'hidden' : ''}">
+                            ${quizHtml}
+                            <button type="submit" class="mt-6 w-full bg-os-primary text-os-bg py-3 rounded-lg font-semibold hover:bg-[#00c0d0] transition shadow-neon-hover">
+                                SUBMIT ANSWERS
+                            </button>
+                        </form>
+                        <div id="quiz-results" class="${isCompleted ? '' : 'hidden'}">
+                           ${feedbackHtml}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button onclick="navigate('theory_menu')"
+                        class="text-os-text hover:text-os-primary font-semibold transition">
+                        ← BACK TO TOPIC MENU
+                    </button>
+                </div>
+            `;
+            document.getElementById('view-theory-content').innerHTML = fullHtml;
+
+            const quizForm = document.getElementById('quiz-form');
+            const quizResults = document.getElementById('quiz-results');
+
+            if (isCompleted) {
+                if (quizForm) quizForm.classList.add('hidden');
+                if (quizResults) quizResults.classList.remove('hidden');
+                
+                const feedbackForm = document.getElementById('feedback-form');
+                if (feedbackForm) {
+                    
+                    feedbackForm.addEventListener('submit', function(event) {
+                        event.preventDefault();
+                        saveFeedback(topicKey);
+                    });
+                }
+            } else {
+                if (quizForm) quizForm.classList.remove('hidden');
+                if (quizResults) quizResults.classList.add('hidden');
+            }
+        }
+
+        function generateQuizHtml(topicKey) {
+            const data = THEORY_DATA[topicKey];
+            const quizSource = data.quiz || THEORY_DATA['process_state'].quiz;
+
+            return quizSource.map((q, index) => `
+                <div class="mb-5 p-4 border border-gray-700 rounded-lg bg-[#1a1a25] shadow-md">
+                    <p class="font-medium text-os-text mb-3">Q${index + 1}: ${q.q}</p>
+                    <div class="space-y-2">
+                        ${q.options.map(option => `
+                            <label class="flex items-center space-x-2 text-gray-400 cursor-pointer hover:bg-[#252535] p-2 rounded-md transition">
+                                <input type="radio" name="q${index}" value="${option}" class="text-os-primary focus:ring-os-primary bg-[#20202a] border-gray-600">
+                                <span>${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateFeedbackHtml(topicKey) {
+  
+            const currentFeedback = appState.feedback[topicKey] || '';
+
+            return `
+                <h3 class="text-2xl font-bold text-os-accent mt-8 mb-4">Feedback and Next Course Ideas</h3>
+                <form id="feedback-form" onsubmit="event.preventDefault(); saveFeedback('${topicKey}')" class="p-4 bg-[#20202a] rounded-lg shadow-inner border border-os-accent/50">
+                    <label for="feedback-text" class="block text-sm font-medium text-os-text mb-2">
+                        Your Feedback/Course Suggestions:
+                    </label>
+                    <textarea id="feedback-text-${topicKey}" rows="4"
+                        class="w-full p-3 border border-gray-600 rounded-lg focus:ring-os-primary focus:border-os-primary bg-[#1a1a25] text-os-text input-glow"
+                        placeholder="What did you like? What should be added or changed?"
+                    >${currentFeedback}</textarea>
+                    <button type="submit" class="mt-3 w-full bg-green-600 text-os-bg py-2 rounded-lg font-semibold hover:bg-green-500 transition shadow-md">
+                        SAVE FEEDBACK
+                    </button>
+                    ${currentFeedback ? `<p class="mt-3 text-sm text-green-400 text-center">Feedback stored successfully.</p>` : ''}
+                </form>
+            `;
+        }
+
+        function submitQuiz(topicKey) {
+            const data = THEORY_DATA[topicKey];
+            const quizSource = data.quiz || THEORY_DATA['process_state'].quiz;
+
+            const form = document.getElementById('quiz-form');
+            let score = 0;
+
+            quizSource.forEach((q, index) => {
+                const selectedOption = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selectedOption && selectedOption.value === q.answer) {
+                    score++;
+                }
+            });
+
+            appState.quizScores[topicKey] = score;
+            saveState();
+
+           
+            renderTheoryContent(topicKey);
+
+            const scoreMsg = `Quiz finished! You scored ${score} out of 5. Your data is saved.`;
+            showModal('Quiz Complete', scoreMsg);
+        }
+
+        function saveFeedback(topicKey) {
+            const feedbackText = document.getElementById(`feedback-text-${topicKey}`).value;
+            appState.feedback[topicKey] = feedbackText.trim();
+            saveState();
+            
+            renderTheoryContent(topicKey);
+
+            showModal('Data Saved', 'Feedback stored successfully.');
+        }
+
+
+        function renderAlgorithmMenu() {
+            const html = `
+                <h1 class="text-3xl font-bold text-os-primary mb-8 text-center view-transition">CPU SCHEDULING ALGORITHMS</h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl mx-auto">
+                    <div onclick="navigate('algorithm_content', {algoKey: 'sjf'})"
+                        class="p-6 bg-[#1a1a25] border-l-4 border-os-primary rounded-lg shadow-md cursor-pointer hover:bg-[#252535] transition duration-300 shadow-neon-hover">
+                        <h2 class="text-xl font-semibold text-os-primary">Shortest Job First (SJF)</h2>
+                        <p class="text-sm text-gray-400 mt-1">Non-Preemptive (Runs until finished).</p>
+                    </div>
+
+                    <div onclick="navigate('algorithm_content', {algoKey: 'srtf'})"
+                        class="p-6 bg-[#1a1a25] border-l-4 border-os-accent rounded-lg shadow-md cursor-pointer hover:bg-[#252535] transition duration-300 shadow-neon-hover">
+                        <h2 class="text-xl font-semibold text-os-accent">SRTF (Preemptive SJF)</h2>
+                        <p class="text-sm text-gray-400 mt-1">Shortest Remaining Time First (Can be paused).</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button onclick="navigate('main_menu')"
+                        class="text-os-text hover:text-os-primary font-semibold transition">
+                        ← BACK TO MAIN MENU
+                    </button>
+                </div>
+            `;
+            document.getElementById('view-algorithm-menu').innerHTML = html;
+        }
+
+
+        function calculateMetrics(processes, algorithm) {
+            let p = JSON.parse(JSON.stringify(processes)); 
+            let n = p.length;
+            let result = {
+                metrics: [], gantt: [], totalTAT: 0, totalWT: 0, avgTAT: 0, avgWT: 0
+            };
+            let currentTime = 0;
+            p.sort((a, b) => a.arrival - b.arrival);
+            p.forEach(proc => proc.remaining = proc.burst);
+
+            if (algorithm === 'srtf') {
+                let completed = 0;
+                let lastExecutedProcess = null;
+                const finalMetrics = p.map(proc => ({ ...proc, completionTime: 0, turnaround: 0, waiting: 0 }));
+                const maxArrival = p.reduce((max, proc) => Math.max(max, proc.arrival), 0);
+                const totalBurstTime = p.reduce((sum, proc) => sum + proc.burst, 0);
+                const safetyLimit = maxArrival + totalBurstTime + 10;
+
+                while (completed < n && currentTime < safetyLimit) {
+                    const readyQueue = p.filter(proc => proc.arrival <= currentTime && proc.remaining > 0);
+
+                    if (readyQueue.length === 0) {
+                        const nextArrivalProc = p.find(proc => proc.remaining > 0 && proc.arrival > currentTime);
+                        if (nextArrivalProc) {
+                            if (result.gantt.length === 0 || result.gantt[result.gantt.length - 1].id !== 'Idle') {
+                                result.gantt.push({ id: 'Idle', start: currentTime, end: nextArrivalProc.arrival, color: processColorsMap['Idle'] });
+                            } else {
+                                result.gantt[result.gantt.length - 1].end = nextArrivalProc.arrival;
+                            }
+                            currentTime = nextArrivalProc.arrival;
+                            continue;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        let shortestJob = readyQueue.reduce((min, current) => {
+                            if (current.remaining < min.remaining) return current;
+                            if (current.remaining === min.remaining && current.arrival < min.arrival) return current;
+                            return min;
+                        }, readyQueue[0]);
+
+                        const start = currentTime;
+                        currentTime++;
+                        shortestJob.remaining--;
+
+                        if (lastExecutedProcess && lastExecutedProcess.id === shortestJob.id) {
+                            result.gantt[result.gantt.length - 1].end = currentTime;
+                        } else {
+                            result.gantt.push({
+                                id: shortestJob.id,
+                                start: start,
+                                end: currentTime,
+                                color: processColorsMap[shortestJob.id] || defaultColors[p.indexOf(shortestJob) % defaultColors.length]
+                            });
+                        }
+                        lastExecutedProcess = shortestJob;
+
+                        if (shortestJob.remaining === 0) {
+                            completed++;
+                            const finalData = finalMetrics.find(item => item.id === shortestJob.id);
+                            finalData.completionTime = currentTime;
+                        }
+                    }
+                }
+
+                finalMetrics.forEach(proc => {
+                    proc.turnaround = proc.completionTime - proc.arrival;
+                    proc.waiting = proc.turnaround - proc.burst;
+                    result.totalTAT += proc.turnaround;
+                    result.totalWT += proc.waiting;
+                    result.metrics.push({
+                        id: proc.id, arrival: proc.arrival, burst: proc.burst, completion: proc.completionTime, turnaround: proc.turnaround, waiting: proc.waiting
+                    });
+                });
+
+            } else { 
+                let completedCount = 0;
+                p.forEach(proc => proc.completed = false);
+
+                while (completedCount < n) {
+                    const availableProcesses = p.filter(proc => !proc.completed && proc.arrival <= currentTime);
+
+                    if (availableProcesses.length === 0) {
+                        const nextArrival = p.find(proc => !proc.completed);
+                        if (nextArrival && nextArrival.arrival > currentTime) {
+                            result.gantt.push({ id: 'Idle', start: currentTime, end: nextArrival.arrival, color: processColorsMap['Idle'] });
+                            currentTime = nextArrival.arrival;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        let nextProcess = availableProcesses.reduce((min, current) => {
+                            if (current.burst < min.burst) return current;
+                            if (current.burst === min.burst && current.arrival < min.arrival) return current;
+                            return min;
+                        }, availableProcesses[0]);
+
+
+                        const processStartTime = currentTime;
+                        const processEndTime = currentTime + nextProcess.burst;
+
+                        nextProcess.start = processStartTime;
+                        nextProcess.completion = processEndTime;
+                        nextProcess.turnaround = nextProcess.completion - nextProcess.arrival;
+                        nextProcess.waiting = nextProcess.turnaround - nextProcess.burst;
+                        nextProcess.completed = true;
+
+                        result.gantt.push({
+                            id: nextProcess.id, start: processStartTime, end: processEndTime,
+                            color: processColorsMap[nextProcess.id] || defaultColors[p.indexOf(nextProcess) % defaultColors.length]
+                        });
+
+                        currentTime = processEndTime;
+                        completedCount++;
+                    }
+                }
+
+                p.forEach(proc => {
+                    result.totalTAT += proc.turnaround;
+                    result.totalWT += proc.waiting;
+                    result.metrics.push({
+                        id: proc.id, arrival: proc.arrival, burst: proc.burst, completion: proc.completion, turnaround: proc.turnaround, waiting: proc.waiting
+                    });
+                });
+            }
+
+            const numProcesses = result.metrics.length;
+            result.avgTAT = numProcesses > 0 ? (result.totalTAT / numProcesses).toFixed(2) : 0;
+            result.avgWT = numProcesses > 0 ? (result.totalWT / numProcesses).toFixed(2) : 0;
+
+            return result;
+        }
+
+        function generateGanttChartHtml(gantt) {
+            if (gantt.length === 0) return '<p class="text-center text-red-500">Execution failed. Check process input parameters.</p>';
+
+            const totalTime = gantt[gantt.length - 1].end;
+            
+            let bars = '';
+            gantt.forEach((item, index) => {
+                const duration = item.end - item.start;
+                const widthPercent = totalTime > 0 ? (duration / totalTime) * 100 : 0;
+                const colorClass = item.color || processColorsMap[item.id] || 'bg-gray-700';
+                
+                const delayMs = index * 100 + 400; 
+                bars += `
+                    <div style="width: ${widthPercent}%; animation-delay: ${delayMs}ms;"
+                        class="h-10 ${colorClass} text-os-bg font-bold flex items-center justify-center border border-os-bg relative group transition-all duration-500 hover:shadow-neon result-animated">
+                        ${item.id !== 'Idle' ? item.id : ''}
+                        <span class="absolute top-11 p-1 text-xs text-os-text bg-[#252535] border border-os-primary/50 rounded shadow-neon hidden group-hover:block whitespace-nowrap">
+                            ${item.id} [${item.start} $\rightarrow$ ${item.end}]
+                        </span>
+                    </div>
+                `;
+            });
+
+            const timeMarkers = [0];
+            gantt.forEach(item => timeMarkers.push(item.end));
+            const uniqueTimeMarkers = [...new Set(timeMarkers)].sort((a, b) => a - b);
+
+            const markersHtml = uniqueTimeMarkers.map(time => {
+                const leftPercent = (time / totalTime) * 100;
+                return `
+                    <span style="left: ${leftPercent}%;" class="absolute transform -translate-x-1/2 -bottom-6 text-xs text-os-text border-t border-os-primary/50 pt-1">${time}</span>
+                `;
+            }).join('');
+
+
+            return `
+                <div class="mt-4">
+                    <h3 class="text-xl font-semibold mb-6 text-os-primary">GANTT CHART VISUALIZATION (Time Unit: ms)</h3>
+                    <div class="relative w-full border border-os-primary/50 rounded overflow-hidden shadow-neon mb-10 bg-[#1a1a25]">
+                        <div class="flex h-10">
+                            ${bars}
+                        </div>
+                        <div class="absolute w-full h-1 -bottom-3">
+                            ${markersHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function generateMetricsTableHtml(metrics, avgTAT, avgWT) {
+            const rows = metrics.map(m => `
+                <tr class="hover:bg-[#252535] transition">
+                    <td class="px-4 py-2 text-center font-medium text-os-text">${m.id}</td>
+                    <td class="px-4 py-2 text-center text-gray-400">${m.arrival}</td>
+                    <td class="px-4 py-2 text-center text-gray-400">${m.burst}</td>
+                    <td class="px-4 py-2 text-center text-os-primary font-semibold">${m.completion || 'N/A'}</td>
+                    <td class="px-4 py-2 text-center text-green-400 font-semibold">${m.turnaround || 'N/A'}</td>
+                    <td class="px-4 py-2 text-center text-os-accent font-semibold">${m.waiting || 'N/A'}</td>
+                </tr>
+            `).join('');
+
+            return `
+                <h3 class="text-xl font-semibold mt-8 mb-3 text-os-accent">PERFORMANCE RESULTS</h3>
+                <div class="overflow-x-auto shadow-neon rounded-lg border border-os-accent/50 bg-[#1a1a25]">
+                    <table class="min-w-full divide-y divide-gray-800">
+                        <thead class="bg-[#252535] text-os-text">
+                            <tr>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">PROCESS ID</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Arrival Time ($A$)</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Burst Time ($B$)</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-os-primary">Completion ($C$)</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-green-400">Turnaround ($T$)</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-os-accent">Waiting ($W$)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            ${rows}
+                            <tr class="bg-[#20202a] font-bold border-t border-os-primary/50">
+                                <td colspan="4" class="px-4 py-2 text-right text-os-primary">AVERAGE TIMES:</td>
+                                <td class="px-4 py-2 text-center text-green-400">${avgTAT}</td>
+                                <td class="px-4 py-2 text-center text-os-accent">${avgWT}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        let processCounter = appState.processInput.length + 1;
+
+        function addProcessRow(processes) {
+            const newProcess = { id: `P${processCounter++}`, arrival: '', burst: '' };
+            if (processes) {
+                processes.push(newProcess);
+            }
+            renderProcessInputTable(processes || appState.processInput);
+        }
+
+        function removeProcessRow(processId) {
+            appState.processInput = appState.processInput.filter(p => p.id !== processId);
+            processCounter = Math.max(processCounter, appState.processInput.length + 1);
+            saveState();
+            renderProcessInputTable(appState.processInput);
+        }
+
+        function renderProcessInputTable(processes) {
+            const tableBody = document.querySelector('#process-input-table tbody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = processes.map((p, index) => `
+                <tr id="row-${p.id}" class="hover:bg-[#252535] transition">
+                    <td class="px-2 py-2 text-center">
+                        <input type="text" value="${p.id}" class="process-id-input w-full text-center p-1 border rounded text-xs bg-[#1a1a25] border-gray-600 text-os-text input-glow" onchange="updateProcessInput(${index}, 'id', this.value)" placeholder="P${index + 1}">
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <input type="number" value="${p.arrival}" class="arrival-input w-full text-center p-1 border rounded text-xs bg-[#1a1a25] border-gray-600 text-os-text input-glow" min="0" onchange="updateProcessInput(${index}, 'arrival', this.value)">
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <input type="number" value="${p.burst}" class="burst-input w-full text-center p-1 border rounded text-xs bg-[#1a1a25] border-gray-600 text-os-text input-glow" min="1" onchange="updateProcessInput(${index}, 'burst', this.value)">
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <button onclick="removeProcessRow('${p.id}')" class="text-red-500 hover:text-red-300 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 6h6v10H7V6z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateProcessInput(index, key, value) {
+            const parsedValue = (key === 'arrival' || key === 'burst') ? parseInt(value) : value;
+            if (key === 'id') {
+                appState.processInput[index][key] = parsedValue.trim() || `P${index + 1}`;
+            } else {
+                appState.processInput[index][key] = isNaN(parsedValue) ? '' : parsedValue;
+            }
+            saveState();
+        }
+        
+        function runSimulation(algoKey) {
+            const inputProcesses = appState.processInput.map((p, index) => ({
+                id: p.id.trim() || `P${index + 1}`,
+                arrival: parseInt(p.arrival),
+                burst: parseInt(p.burst),
+                color: processColorsMap[p.id] || defaultColors[index % defaultColors.length]
+            }));
+
+            const invalidProcess = inputProcesses.find(p => isNaN(p.arrival) || isNaN(p.burst) || p.arrival < 0 || p.burst <= 0);
+
+            if (invalidProcess || inputProcesses.length === 0) {
+                 showModal('INPUT ERROR', 'Please enter valid Arrival Time ($\ge 0$) and Burst Time ($> 0$) for all processes.');
+                 return;
+            }
+
+            appState.processInput = inputProcesses.map(p => ({ id: p.id, arrival: p.arrival, burst: p.burst }));
+            saveState();
+
+            document.getElementById('simulation-results').innerHTML = `
+                <div class="flex flex-col items-center justify-center p-10 space-y-4 bg-[#20202a] rounded-lg border border-os-primary/50 shadow-lg">
+                    <h3 class="text-2xl font-semibold text-os-primary">Executing Algorithm...</h3>
+                    <div class="flex space-x-2">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                    <p class="text-sm text-gray-400">Processing ${inputProcesses.length} units using ${algoKey.toUpperCase()}.</p>
+                </div>
+            `;
+
+            setTimeout(() => {
+                renderAlgorithmContent(algoKey, inputProcesses, true); 
+            }, 1500);
+        }
+
+        function renderAlgorithmContent(algoKey, processes, skipLoading = false) {
+            const data = ALGORITHM_DATA[algoKey];
+            if (!data) {
+                showModal('ERROR', 'Algorithm not found.');
+                navigate('algorithm_menu');
+                return;
+            }
+
+            let simulationResult = { metrics: [], gantt: [], totalTAT: 0, totalWT: 0, avgTAT: 0, avgWT: 0 };
+            if (processes && processes.length > 0) {
+                try {
+                    simulationResult = calculateMetrics(processes, algoKey);
+                } catch(e) {
+                    console.error("Stimulation failed:", e);
+                    showModal('STIMULATION CRASH', 'An error happened during the calculation. Check your process data.');
+                }
+            }
+
+            const ganttHtml = generateGanttChartHtml(simulationResult.gantt);
+            const tableHtml = generateMetricsTableHtml(simulationResult.metrics, simulationResult.avgTAT, simulationResult.avgWT);
+
+
+            const contentHtml = `
+                <div class="bg-[#1a1a25] p-5 rounded-lg shadow-inner border border-os-primary/50">
+                    <p class="text-gray-300 leading-relaxed">${data.info}</p>
+                </div>
+
+                <div class="p-5 border border-gray-700 rounded-lg bg-[#1a1a25] shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-os-primary">PROCESS DATA INPUT</h3>
+                    <div class="overflow-x-auto">
+                        <table id="process-input-table" class="min-w-full divide-y divide-gray-700 border border-gray-700">
+                            <thead class="bg-[#20202a]">
+                                <tr>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-os-primary uppercase">PROCESS ID</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-os-primary uppercase">Arrival Time ($A$)</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-os-primary uppercase">Burst Time ($B$)</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-os-primary uppercase">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-[#1a1a25] divide-y divide-gray-800">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 mt-4">
+                        <button onclick="addProcessRow(appState.processInput)"
+                            class="flex-1 bg-green-600 text-os-bg py-2 px-4 rounded-lg font-semibold hover:bg-green-500 transition shadow-neon-hover">
+                            + ADD PROCESS
+                        </button>
+                        <button onclick="runSimulation('${algoKey}')"
+                            class="flex-1 bg-os-accent text-os-bg py-2 px-4 rounded-lg font-semibold hover:bg-os-primary transition shadow-neon-hover">
+                            RUN STIMULATION
+                        </button>
+                    </div>
+                </div>
+
+                <div id="simulation-results" class="p-5 border border-gray-700 rounded-lg bg-[#1a1a25] shadow-md">
+                    <div class="result-animated delay-1">
+                        ${ganttHtml}
+                    </div>
+                    <div class="result-animated delay-2">
+                        ${tableHtml}
+                    </div>
+                </div>
+            `;
+            
+            const fullHtml = `
+                <h1 class="text-3xl font-bold text-os-primary mb-6 text-center border-b pb-4 border-gray-700">${data.title}</h1>
+                <div class="space-y-8">
+                    ${contentHtml}
+                </div>
+                <div class="mt-10 text-center">
+                    <button onclick="navigate('algorithm_menu')"
+                        class="text-os-text hover:text-os-primary font-semibold transition">
+                        ← BACK TO ALGORITHMS
+                    </button>
+                </div>
+            `;
+
+            if (!skipLoading) {
+                document.getElementById('view-algorithm-content').innerHTML = fullHtml;
+            } else {
+              
+                const container = document.getElementById('view-algorithm-content');
+              
+                container.querySelector('.space-y-8').innerHTML = contentHtml;
+            }
+            
+            renderProcessInputTable(appState.processInput);
+        }
+
+
+        
+        window.onload = function() {
+            loadState();
+            updateClock();
+            
+            if (appState.loggedIn) {
+                navigate('main_menu');
+            } else {
+                navigate('landing');
+            }
+        };
+    </script>
+</body>
+</html>
